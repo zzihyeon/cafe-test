@@ -44,12 +44,14 @@ const GetNewPostList = async (driver, defaultHandle, prev,manu_id) => {
         driver.switchTo().frame(elem);
         await driver.wait(until.elementLocated(By.css('.td_article')));
         const elems = await driver.findElements(By.css('.td_article'));
+        await driver.wait(until.elementLocated(By.css('.inner_number')));
         const a = await elems[0].findElement(By.css('.inner_number'));
         const id = await a.getText();
         console.log(new Date());
         if ( id == next || next == "" ) {
             next = id;
             driver.switchTo().window(defaultHandle);
+            await driver.wait(until.elementLocated(By.css(`#`+manu_id)));// 게시판 링크 클릭
             const loginSubmit = await driver.findElement(By.css(`#`+manu_id));// 게시판 링크 클릭
             await loginSubmit.click();
         } else {
