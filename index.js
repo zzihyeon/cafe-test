@@ -14,7 +14,7 @@ const CommentToPost = async (driver, defaultHandle) => {
     //글입력 대기
     await driver.wait(until.elementLocated(By.css('.comment_inbox_text')));
     const inputElem =await driver.findElement(By.css('.comment_inbox_text'));
-    inputElem.sendKeys("대머리 준승이")
+    inputElem.sendKeys("감사합니다.")
 
     //업로드 버튼 클릭
     let btnArea = await driver.findElement(By.className('btn_register'));
@@ -45,8 +45,19 @@ const GetNewPostList = async (driver, defaultHandle, prev,manu_id) => {
         await driver.wait(until.elementLocated(By.css('.td_article')));
         const elems = await driver.findElements(By.css('.td_article'));
         await driver.wait(until.elementLocated(By.css('.inner_number')));
-        const a = await elems[0].findElement(By.css('.inner_number'));
+        let idx = 0; //공지글이 아닌 최초 글
+        for (i=0;i<elems.length;i++) {
+            try {
+                await elems[i].findElement(By.css('.inner_number'));
+                idx = i;
+                break;
+            } catch(ex) {
+                console.log(i);
+            }
+        }
+        const a = await elems[idx].findElement(By.css('.inner_number'));
         const id = await a.getText();
+        console.log(`id: ${id}`)
         console.log(new Date());
         if ( id == next || next == "" ) {
             next = id;
@@ -56,7 +67,7 @@ const GetNewPostList = async (driver, defaultHandle, prev,manu_id) => {
             await loginSubmit.click();
         } else {
             next = id;
-            await elems[0].findElement(By.css('.article')).click();
+            await elems[idx].findElement(By.css('.article')).click();
             return {code: 0, id: next, url: currentUrl};
         }
     }
