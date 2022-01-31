@@ -119,8 +119,8 @@ const Cafein = async (driver,defaultHandle, id)=>{
         await driver.get("https://nid.naver.com/nidlogin.login?mode=form&url=https%3A%2F%2Fwww.naver.com"); 
         await Nlogin(driver,config.user_id,config.user_pw);
         while(1){
-        await driver.get("https://cafe.naver.com/" + config.cafe_id); 
-        await Cafein(driver, defaultHandle, config.menu_id);
+            await driver.get("https://cafe.naver.com/" + config.cafe_id); 
+            await Cafein(driver, defaultHandle, config.menu_id);
             const { code, id:newId, url } = await GetNewPostList(driver, defaultHandle, id, config.menu_id);
             id = newId;
             if(code == 0 ) {
