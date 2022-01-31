@@ -57,7 +57,6 @@ const GetNewPostList = async (driver, defaultHandle, prev,manu_id) => {
         }
         const a = await elems[idx].findElement(By.css('.inner_number'));
         const id = await a.getText();
-        console.log(`id: ${id}`)
         console.log(new Date());
         if ( id == next || next == "" ) {
             next = id;
