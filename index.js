@@ -52,7 +52,6 @@ const GetNewPostList = async (driver, defaultHandle, prev,manu_id) => {
                 idx = i;
                 break;
             } catch(ex) {
-                console.log(i);
             }
         }
         const a = await elems[idx].findElement(By.css('.inner_number'));
