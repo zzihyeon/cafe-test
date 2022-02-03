@@ -14,7 +14,7 @@ const CommentToPost = async (driver, defaultHandle) => {
     //글입력 대기
     await driver.wait(until.elementLocated(By.css('.comment_inbox_text')));
     const inputElem =await driver.findElement(By.css('.comment_inbox_text'));
-    inputElem.sendKeys("감사합니다.")
+    inputElem.sendKeys("ㅁ")
 
     //업로드 버튼 클릭
     let btnArea = await driver.findElement(By.className('btn_register'));
@@ -122,7 +122,19 @@ const Cafein = async (driver,defaultHandle, id)=>{
             const { code, id:newId, url } = await GetNewPostList(driver, defaultHandle, id, config.menu_id);
             id = newId;
             if(code == 0 ) {
-                await CommentToPost(driver, defaultHandle);
+                while(1) {
+                    try {
+                        await CommentToPost(driver, defaultHandle);
+                        break;
+                    } catch(ex) {
+                        (function () {
+                            return new Promise((resolve)=>{
+                                setTimeout(resolve,100);
+                            })
+                        }
+                        )()
+                    }
+                }
             }
         }
     } catch(err){ 
