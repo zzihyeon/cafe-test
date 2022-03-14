@@ -28,15 +28,17 @@ const CommentToPost = async (cafeId, id, cookies) => {
         };
         request.post(options, function (error, response, body) {
             if (!error && response.statusCode == 200) {
-                console.log(JSON.parse(body));
+                resolve();
             }
         })
     })
 }
 
-const GetNewPostList = async () => {
+const GetNewPostList = async (clubid, menuid) => {
     return new Promise((resolve) => {
-        request('https://apis.naver.com/cafe-web/cafe2/ArticleList.json?search.clubid=30638376&search.queryType=lastArticle&search.menuid=3&search.page=1&search.perPage=1&ad=true&uuid=d550e453-565c-4cf5-892f-dbd4be7973f4&adUnit=MW_CAFE_ARTICLE_LIST_RS', function (error, response, body) {
+        request(
+            `https://apis.naver.com/cafe-web/cafe2/ArticleList.json?search.clubid=${clubid}&search.queryType=lastArticle&search.menuid=${menuid}&search.page=1&search.perPage=1&ad=true&uuid=d550e453-565c-4cf5-892f-dbd4be7973f4&adUnit=MW_CAFE_ARTICLE_LIST_RS`
+            , function (error, response, body) {
             if (!error && response.statusCode == 200) {
                 const articleList = JSON.parse(body).message.result.articleList;
                 if (JSON.parse(body).message === undefined) {
@@ -81,12 +83,12 @@ const Nlogin = async (driver,nid,npw)=>{
         await driver.get("https://nid.naver.com/nidlogin.login?mode=form&url=https%3A%2F%2Fwww.naver.com"); 
         const cookies = await Nlogin(driver,config.user_id,config.user_pw);
         while(1){
-            const { id: newId } = await GetNewPostList(driver, defaultHandle, id, config.menu_id);
+            const { id: newId } = await GetNewPostList(config.cafe_id, config.menu_id);
             if (id === 0 || id == newId) {
                 id = newId;
                 await (function () {
                     return new Promise((resolve)=>{
-                        setTimeout(resolve,200);
+                        setTimeout(resolve,100);
                     })
                 }
                 )()
