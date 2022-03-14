@@ -1,18 +1,23 @@
 {
-  "bin":{
-    "app":"./index.js"
+  "bin": {
+    "app": "./index.js"
   },
   "script": {
     "build:server": "babel src -d build"
   },
   "dependencies": {
+    "request": "^2.88.2",
     "selenium-webdriver": "^4.1.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.8",
     "@babel/core": "^7.16.12"
   },
-  "pkg" : { "assets": [ "node_modules/**/*"]},
+  "pkg": {
+    "assets": [
+      "node_modules/**/*"
+    ]
+  },
   "name": "navertest",
   "version": "1.0.0",
   "main": "index.js",
