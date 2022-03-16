@@ -86,18 +86,13 @@ const Nlogin = async (driver,nid,npw)=>{
             const { id: newId } = await GetNewPostList(config.cafe_id, config.menu_id);
             if (id === 0 || id == newId) {
                 id = newId;
-                await (function () {
-                    return new Promise((resolve)=>{
-                        setTimeout(resolve,100);
-                    })
-                }
-                )()
+                console.log("searching... ",new Date().getSeconds(), new Date().getMilliseconds());
                 continue;
             }
             id = newId;
-            console.log(new Date().getSeconds(), new Date().getMilliseconds());
+            console.log("get new post",new Date().getSeconds(), new Date().getMilliseconds());
             await CommentToPost(config.cafe_id, newId, cookies);
-            console.log(new Date().getSeconds(),new Date().getMilliseconds());
+            console.log("write comment",new Date().getSeconds(),new Date().getMilliseconds());
         }
     } catch(err){ 
         console.log("자동화 도중 에러 ",err + " 에러메시지 끝 "); 
