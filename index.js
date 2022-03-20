@@ -1,146 +1,102 @@
-const _url = "https://www.naver.com/"; 
-const webdriver = require('selenium-webdriver'); 
+const _url = "https://www.naver.com/";
+const webdriver = require('selenium-webdriver');
 const fs = require('fs');
-const {By,until} = webdriver; 
+const request = require('request');
+const { By, until } = webdriver;
 
-const CommentToPost = async (driver, defaultHandle) => {
-    //새탭 핸들값 저장 및 핸들 값 새탭으로 변경
-    let windows = await driver.getAllWindowHandles();
-    windows.forEach(async handle => {
-        if (handle !== defaultHandle) {
-            await driver.switchTo().window(handle);
-        }
-    });
-    //글입력 대기
-    await driver.wait(until.elementLocated(By.css('.comment_inbox_text')));
-    const inputElem =await driver.findElement(By.css('.comment_inbox_text'));
-    inputElem.sendKeys("ㅁ")
-
-    //업로드 버튼 클릭
-    let btnArea = await driver.findElement(By.className('btn_register'));
-    await btnArea.click();
-
-    // await driver.sleep(3500);
-
-    // await driver.close();
-    //console.log('새탭 닫기 / 핸들 변경');
+const CommentToPost = async (cafeId, id, cookies) => {
+  return new Promise((resolve) => {
+    const setCookies = cookies.map((ele) => {
+      return `${ele.name}=${ele.value}`
+    })
+    const makingCookie = setCookies.join(';');
+    const options = {
+      uri: 'https://apis.naver.com/cafe-web/cafe-mobile/CommentPost.json',
+      method: 'POST',
+      headers: {
+        'cookie': makingCookie,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      form: {
+        cafeId: cafeId,
+        articleId: id,
+        content: "1",
+        stickerId: "",
+        requestFrom: "B",
+      }
+    };
+    request.post(options, function (error, response, body) {
+      if (!error && response.statusCode == 200) {
+        resolve();
+      }
+    })
+  })
 }
 
-const GetNewPostList = async (driver, defaultHandle, prev,manu_id) => {
-    //새탭 핸들값 저장 및 핸들 값 새탭으로 변경
-    let windows = await driver.getAllWindowHandles();
-    windows.forEach(async handle => {
-        if (handle !== defaultHandle) {
-            await driver.switchTo().window(handle);
+const GetNewPostList = async (clubid, menuid) => {
+  return new Promise((resolve) => {
+    request(
+      `https://apis.naver.com/cafe-web/cafe2/ArticleList.json?search.clubid=${clubid}&search.queryType=lastArticle&search.menuid=${menuid}&search.page=1&search.perPage=1&ad=true&uuid=d550e453-565c-4cf5-892f-dbd4be7973f4&adUnit=MW_CAFE_ARTICLE_LIST_RS`
+      , function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+          const articleList = JSON.parse(body).message.result.articleList;
+          if (JSON.parse(body).message === undefined) {
+            return resolve({ id: 0 })
+          }
+          console.log(articleList[0].item.articleId);
+          return resolve({ id: articleList[0].item.articleId });
         }
-    });
-    //현재 URL 얻기
-    let next = prev;
-    let currentUrl = await driver.getCurrentUrl();
-    for(;;){
-        await driver.wait(until.elementLocated(By.css('#main-area')));
-        await driver.wait(until.elementLocated(By.name('cafe_main')));
-        const elem =await driver.findElement(By.name('cafe_main'));
-        driver.switchTo().frame(elem);
-        await driver.wait(until.elementLocated(By.css('.td_article')));
-        const elems = await driver.findElements(By.css('.td_article'));
-        await driver.wait(until.elementLocated(By.css('.inner_number')));
-        let idx = 0; //공지글이 아닌 최초 글
-        for (i=0;i<elems.length;i++) {
-            try {
-                await elems[i].findElement(By.css('.inner_number'));
-                idx = i;
-                break;
-            } catch(ex) {
-            }
-        }
-        const a = await elems[idx].findElement(By.css('.inner_number'));
-        const id = await a.getText();
-        console.log(new Date());
-        if ( id == next || next == "" ) {
-            next = id;
-            driver.switchTo().window(defaultHandle);
-            await driver.wait(until.elementLocated(By.css(`#`+manu_id)));// 게시판 링크 클릭
-            const loginSubmit = await driver.findElement(By.css(`#`+manu_id));// 게시판 링크 클릭
-            await loginSubmit.click();
-        } else {
-            next = id;
-            await elems[idx].findElement(By.css('.article')).click();
-            return {code: 0, id: next, url: currentUrl};
-        }
-    }
-
-    // await driver.close();
-    //console.log('새탭 닫기 / 핸들 변경');
+      })
+  })
 }
 
 //네이버 로그인
-const Nlogin = async (driver,nid,npw)=>{
+const Nlogin = async (driver, nid, npw) => {
+  return new Promise(async (resolve) => {
     //대기 (아이디 비번)
     await driver.wait(until.elementLocated(By.css('#id')));
     await driver.wait(until.elementLocated(By.css('#pw')));
 
     //아이디 비번 입력
     await driver.executeScript(`
-        document.querySelector('#id').value = '${nid}';
-        document.querySelector('#pw').value = '${npw}';
-    `);
+            document.querySelector('#id').value = '${nid}';
+            document.querySelector('#pw').value = '${npw}';
+        `);
 
     await driver.wait(until.elementLocated(By.css('.btn_login')));
 
     const loginSubmit = await driver.findElement(By.css(`.btn_login`));
     await loginSubmit.click();
-}
-
-//카페 들어가기
-const Cafein = async (driver,defaultHandle, id)=>{
-    //대기 (아이디 비번)
-    let windows = await driver.getAllWindowHandles();
-    windows.forEach(async handle => {
-        if (handle !== defaultHandle) {
-            await driver.switchTo().window(handle);
-        }
+    driver.manage().getCookies().then(function (cookies) {
+      return resolve(cookies);
     });
-    await driver.wait(until.elementLocated(By.css('#' + id)));//게시판 링크 찾기
-
-    const loginSubmit = await driver.findElement(By.css(`#`+id));// 게시판 링크 클릭
-    await loginSubmit.click();
+  })
 }
 
-(async () => { 
-    const driver = await new webdriver.Builder().forBrowser('chrome').build(); 
-    try { 
-        let id = "";
-        const config = JSON.parse(fs.readFileSync("./config.json"));
-        const defaultHandle = await driver.getWindowHandle();
+(async () => {
+  const driver = await new webdriver.Builder().forBrowser('chrome').build();
+  try {
+    let id = 0;
+    const config = JSON.parse(fs.readFileSync("./config.json"));
 
-        await driver.get("https://nid.naver.com/nidlogin.login?mode=form&url=https%3A%2F%2Fwww.naver.com"); 
-        await Nlogin(driver,config.user_id,config.user_pw);
-        while(1){
-            await driver.get("https://cafe.naver.com/" + config.cafe_id); 
-            await Cafein(driver, defaultHandle, config.menu_id);
-            const { code, id:newId, url } = await GetNewPostList(driver, defaultHandle, id, config.menu_id);
-            id = newId;
-            if(code == 0 ) {
-                while(1) {
-                    try {
-                        await CommentToPost(driver, defaultHandle);
-                        break;
-                    } catch(ex) {
-                        (function () {
-                            return new Promise((resolve)=>{
-                                setTimeout(resolve,100);
-                            })
-                        }
-                        )()
-                    }
-                }
-            }
-        }
-    } catch(err){ 
-        console.log("자동화 도중 에러 ",err + " 에러메시지 끝 "); 
-    } finally { 
-        await driver.sleep(2000); 
-        await driver.quit(); 
-    } 
+    await driver.get("https://nid.naver.com/nidlogin.login?mode=form&url=https%3A%2F%2Fwww.naver.com");
+    const cookies = await Nlogin(driver, config.user_id, config.user_pw);
+    while (1) {
+      const { id: newId } = await GetNewPostList(config.cafe_id, config.menu_id);
+      if (id === 0 || id == newId) {
+        id = newId;
+        console.log("searching... ", new Date().getSeconds(), new Date().getMilliseconds());
+        continue;
+      }
+      id = newId;
+      console.log("get new post", new Date().getSeconds(), new Date().getMilliseconds());
+      await CommentToPost(config.cafe_id, newId, cookies);
+      console.log("write comment", new Date().getSeconds(), new Date().getMilliseconds());
+    }
+  } catch (err) {
+    console.log("자동화 도중 에러 ", err + " 에러메시지 끝 ");
+  } finally {
+    await driver.sleep(2000);
+    await driver.quit();
+  }
 })();
