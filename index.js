@@ -90,11 +90,22 @@ const Nlogin = async (driver, nid, npw) => {
       }
       id = newId;
       console.log("get new post", new Date().getSeconds(), new Date().getMilliseconds());
-      await CommentToPost(config.cafe_id, newId, cookies);
-      console.log("write comment", new Date().getSeconds(), new Date().getMilliseconds());
+      // await CommentToPost(config.cafe_id, newId, cookies);
+      //TODO: 네이버 폼 찾아서 링크 열기
+      //goto page
+      const url = `https://m.cafe.naver.com/ca-fe/web/cafes/${config.cafe_id}/articles/${newId}?fromList=true`;
+      await driver.get(url);
+      // await driver.wait(until.elementLocated(By.className('se-table-content')));
+      // const data = await driver.findElement(By.className('se-table-content')).getText();
+      // console.log(data);
+      await driver.wait(until.elementLocated(By.className('se-oglink-info')));
+      const href = await driver.findElement(By.className('se-oglink-info')).sendKeys('\n');
+      console.log("매크로 쓰기", new Date().getSeconds(), new Date().getMilliseconds());
+      for(;;){}
     }
   } catch (err) {
     console.log("자동화 도중 에러 ", err + " 에러메시지 끝 ");
+    for(;;){}
   } finally {
     await driver.sleep(2000);
     await driver.quit();
