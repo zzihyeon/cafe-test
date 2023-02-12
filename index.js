@@ -99,8 +99,22 @@ const Nlogin = async (driver, nid, npw) => {
       // const data = await driver.findElement(By.className('se-table-content')).getText();
       // console.log(data);
       await driver.wait(until.elementLocated(By.className('se-oglink-info')));
-      const href = await driver.findElement(By.className('se-oglink-info')).sendKeys('\n');
-      console.log("매크로 쓰기", new Date().getSeconds(), new Date().getMilliseconds());
+      const formLink = await driver.findElement(By.className('se-oglink-info')).getAttribute('href');
+
+      await driver.get(formLink);
+
+      // 폼 필드 값을 입력합니다.
+      // await driver.findElement(By.name("이름")).sendKeys("김진숙"); // 이름 필드
+      // await driver.findElement(By.name("핸드폰")).sendKeys("01025893353"); // 전화번호 필드
+      // await driver.findElement(By.name("월부닷컴")).sendKeys("wlstnr969"); // 전화번호 필드
+      try {
+        await driver.findElement(By.className("phone1")).sendKeys("010"); // 전화번호 필드
+        await driver.findElement(By.className("phone2")).sendKeys("2589"); // 전화번호 필드
+        await driver.findElement(By.className("phone3")).sendKeys("3353"); // 전화번호 필드
+      } catch(ex){
+        console.log(ex);
+      }
+
       for(;;){}
     }
   } catch (err) {
