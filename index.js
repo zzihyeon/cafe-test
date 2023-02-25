@@ -50,14 +50,14 @@ const GetNewPostList = async (clubid, menuid) => {
   })
 }
 
-//네이버 로그인
+//spdlqj fhrmdls
 const Nlogin = async (driver, nid, npw) => {
   return new Promise(async (resolve) => {
-    //대기 (아이디 비번)
+    //eorl (dkdlel qlqjs)
     await driver.wait(until.elementLocated(By.css('#id')));
     await driver.wait(until.elementLocated(By.css('#pw')));
 
-    //아이디 비번 입력
+    //dkdlel qlqjs dlqfur
     await driver.executeScript(`
             document.querySelector('#id').value = '${nid}';
             document.querySelector('#pw').value = '${npw}';
@@ -80,42 +80,55 @@ const Nlogin = async (driver, nid, npw) => {
     const config = JSON.parse(fs.readFileSync("./config.json"));
 
     await driver.get("https://nid.naver.com/nidlogin.login?mode=form&url=https%3A%2F%2Fwww.naver.com");
-    const cookies = await Nlogin(driver, config.user_id, config.user_pw);
+    await Nlogin(driver, config.user_id, config.user_pw);
     while (1) {
       const { id: newId } = await GetNewPostList(config.cafe_id, config.menu_id);
       if (id === 0 || id == newId) {
         id = newId;
-        console.log("searching... ", new Date().getSeconds(), new Date().getMilliseconds());
+        console.log("searching… ", new Date().getSeconds(), new Date().getMilliseconds());
         continue;
       }
       id = newId;
       console.log("get new post", new Date().getSeconds(), new Date().getMilliseconds());
-      // await CommentToPost(config.cafe_id, newId, cookies);
-      //TODO: 네이버 폼 찾아서 링크 열기
-      //goto page
       const url = `https://m.cafe.naver.com/ca-fe/web/cafes/${config.cafe_id}/articles/${newId}?fromList=true`;
       await driver.get(url);
-      // await driver.wait(until.elementLocated(By.className('se-table-content')));
-      // const data = await driver.findElement(By.className('se-table-content')).getText();
-      // console.log(data);
       await driver.wait(until.elementLocated(By.className('se-oglink-info')));
       const formLink = await driver.findElement(By.className('se-oglink-info')).getAttribute('href');
 
       await driver.get(formLink);
 
-      // 폼 필드 값을 입력합니다.
-      // await driver.findElement(By.name("이름")).sendKeys("김진숙"); // 이름 필드
-      // await driver.findElement(By.name("핸드폰")).sendKeys("01025893353"); // 전화번호 필드
-      // await driver.findElement(By.name("월부닷컴")).sendKeys("wlstnr969"); // 전화번호 필드
+      // 핸드폰 번호
       try {
-        await driver.findElement(By.className("phone1")).sendKeys("010"); // 전화번호 필드
-        await driver.findElement(By.className("phone2")).sendKeys("2589"); // 전화번호 필드
-        await driver.findElement(By.className("phone3")).sendKeys("3353"); // 전화번호 필드
+        await driver.findElement(By.className("phone1")).sendKeys("010"); 
+        await driver.findElement(By.className("phone2")).sendKeys("2589");
+        await driver.findElement(By.className("phone3")).sendKeys("3353"); 
       } catch(ex){
         console.log(ex);
       }
-
-      for(;;){}
+      // 나머지 폼
+      try {
+        const allInputHeaders = await driver.findElements(By.className('formItemPh text'))
+        await Promise.all(allInputHeaders.map(async (inputHeader)=>{
+          try {
+            const title = await inputHeader.findElement(By.css('span[role="heading"]')).getText()
+            let sendVal = "";
+            if (title.includes("이름")) {
+              sendVal = "김진숙"
+            } else if (title.includes("월부닷컴") || title.includes("아이디")) {
+              sendVal = "wlstnr969"
+            } else if (title.includes("email") || title.includes("이메일")) {
+              sendVal = "wlstnr969@naver.com"
+            } else if (title.includes("닉네")) {
+              sendVal = "해피널스"
+            }
+            await inputHeader.findElement(By.id("answer")).sendKeys(sendVal);
+          }catch(ex){
+            console.log(ex);
+          }
+        }));
+      } catch(ex){
+        console.log(ex);
+      }
     }
   } catch (err) {
     console.log("자동화 도중 에러 ", err + " 에러메시지 끝 ");
