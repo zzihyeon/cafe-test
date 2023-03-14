@@ -2,7 +2,7 @@ const _url = "https://www.naver.com/";
 const webdriver = require('selenium-webdriver');
 const fs = require('fs');
 const request = require('request');
-const { By, until } = webdriver;
+const { Key, By, until } = webdriver;
 
 const CommentToPost = async (cafeId, id, cookies) => {
   return new Promise((resolve) => {
@@ -92,16 +92,25 @@ const Nlogin = async (driver, nid, npw) => {
       console.log("get new post", new Date().getSeconds(), new Date().getMilliseconds());
       const url = `https://m.cafe.naver.com/ca-fe/web/cafes/${config.cafe_id}/articles/${newId}?fromList=true`;
       await driver.get(url);
-      await driver.wait(until.elementLocated(By.className('se-oglink-info')));
-      const formLink = await driver.findElement(By.className('se-oglink-info')).getAttribute('href');
-
-      await driver.get(formLink);
-
+      let waiting = true
+      while(waiting){
+        await driver.wait(until.elementLocated(By.className('se-oglink-info')));
+        const formLinkEles = await driver.findElements(By.className('se-oglink-info'));
+        for (formLinkEle of formLinkEles) {
+          const link = await formLinkEle.getAttribute('href');
+          if(link.includes("naver.me")) {
+            await driver.get(link);
+            waiting = false;
+            break;
+          }
+        }
+      }
+     
       // 핸드폰 번호
       try {
-        await driver.findElement(By.className("phone1")).sendKeys("010"); 
-        await driver.findElement(By.className("phone2")).sendKeys("2589");
-        await driver.findElement(By.className("phone3")).sendKeys("3353"); 
+        await driver.findElement(By.xpath("//input[@title='처음 번호']")).sendKeys(config.phone_first);
+        await driver.findElement(By.xpath("//input[@title='가운데 번호']")).sendKeys(config.phone_middle);
+        await driver.findElement(By.xpath("//input[@title='마지막 번호']")).sendKeys(config.phone_last); 
       } catch(ex){
         console.log(ex);
       }
@@ -109,19 +118,45 @@ const Nlogin = async (driver, nid, npw) => {
       try {
         const allInputHeaders = await driver.findElements(By.className('formItemPh text'))
         await Promise.all(allInputHeaders.map(async (inputHeader)=>{
+        // for (const inputHeader of allInputHeaders){
           try {
             const title = await inputHeader.findElement(By.css('span[role="heading"]')).getText()
             let sendVal = "";
             if (title.includes("이름")) {
-              sendVal = "김진숙"
+              sendVal = config.user_name;
             } else if (title.includes("월부닷컴") || title.includes("아이디")) {
-              sendVal = "wlstnr969"
+              if (title.includes("성함")) {
+                sendVal = config.user_name;
+              } else {
+                sendVal = config.user_id;
+              }
             } else if (title.includes("email") || title.includes("이메일")) {
-              sendVal = "wlstnr969@naver.com"
+              sendVal = config.email;
             } else if (title.includes("닉네")) {
-              sendVal = "해피널스"
+              sendVal = config.nick_name;
             }
             await inputHeader.findElement(By.id("answer")).sendKeys(sendVal);
+          }catch(ex){
+            console.log(ex);
+          }
+        }));
+        const allRadioHeaders = await driver.findElements(By.className('formItemPh singleChoice vertical'))
+        await Promise.all(allRadioHeaders.map(async (radioHeader)=>{
+          try {
+            const regex = /radio_label/
+            const buttons = await radioHeader.findElements(By.css("span[id*='" + regex.source + "']"));
+            await Promise.all(buttons.map(async (button)=>{
+              const text = await button.getText();
+              if (text.includes("확인했습니다") || text.includes("카페공지") || (text.includes("동의") && !text.includes("미동의"))) {
+                try{
+                  console.log(text)
+                  await driver.executeScript("arguments[0].scrollIntoView();", button);
+                  await button.click();
+                }catch(ex){
+                  console.log(ex);
+                }
+              }
+            }))
           }catch(ex){
             console.log(ex);
           }
