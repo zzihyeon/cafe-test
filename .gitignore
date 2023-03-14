@@ -1,5 +1,6 @@
 node_modules/
 config.json
+cafeinfo.json
 chromedriver.exe
 LICENSE.chromedriver
 navertest-linux
