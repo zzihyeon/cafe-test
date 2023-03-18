@@ -145,7 +145,8 @@ const Nlogin = async (driver, nid, npw) => {
           try {
             const regex = /radio_label/
             const buttons = await radioHeader.findElements(By.css("span[id*='" + regex.source + "']"));
-            await Promise.all(buttons.map(async (button)=>{
+            // await Promise.all(buttons.map(async (button)=>
+            for(const button of buttons){
               const text = await button.getText();
               if (text.includes("확인했습니다") || text.includes("카페공지") || (text.includes("동의") && !text.includes("미동의"))) {
                 try{
@@ -156,7 +157,8 @@ const Nlogin = async (driver, nid, npw) => {
                   console.log(ex);
                 }
               }
-            }))
+            }
+            // ))
           }catch(ex){
             console.log(ex);
           }
