@@ -117,8 +117,8 @@ const Nlogin = async (driver, nid, npw) => {
       // 나머지 폼
       try {
         const allInputHeaders = await driver.findElements(By.className('formItemPh text'))
-        await Promise.all(allInputHeaders.map(async (inputHeader)=>{
-        // for (const inputHeader of allInputHeaders){
+        // await Promise.all(allInputHeaders.map(async (inputHeader)=>{
+        for (const inputHeader of allInputHeaders){
           try {
             const title = await inputHeader.findElement(By.css('span[role="heading"]')).getText()
             let sendVal = "";
@@ -139,9 +139,11 @@ const Nlogin = async (driver, nid, npw) => {
           }catch(ex){
             console.log(ex);
           }
-        }));
+        }
+        // }));
         const allRadioHeaders = await driver.findElements(By.className('formItemPh singleChoice vertical'))
-        await Promise.all(allRadioHeaders.map(async (radioHeader)=>{
+        // await Promise.all(allRadioHeaders.map(async (radioHeader)=>{
+        for (const radioHeader of allRadioHeaders){
           try {
             const regex = /radio_label/
             const buttons = await radioHeader.findElements(By.css("span[id*='" + regex.source + "']"));
@@ -162,7 +164,8 @@ const Nlogin = async (driver, nid, npw) => {
           }catch(ex){
             console.log(ex);
           }
-        }));
+        }
+        // }));
       } catch(ex){
         console.log(ex);
       }
